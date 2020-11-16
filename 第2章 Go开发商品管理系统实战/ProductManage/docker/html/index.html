@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<title>Product</title>
+  <link rel="stylesheet" href="css/elment-ui.css">
+  <style>
+	* {
+		margin: 0;
+		padding:0;
+	}
+	body {
+		font-family: "Microsoft Yahei";
+	}
+	#app {
+		padding: 20px;
+	}
+	.el-pagination {
+		text-align: right;
+		padding: 20px 0;
+	}
+	.mark .el-form-item__content {
+		width: 835px;
+	}
+	.mark2 .el-form-item__content {
+		width: 835px;
+	}
+	.mark .el-textarea__inner {
+		font-family: "Microsoft Yahei";
+	}
+	.el-dialog__body {
+		font-size:12px !important;
+		padding: 0 20px;
+	}
+	.el-textarea__inner {
+		font-size:12px !important;
+	}	
+	.el-dialog .el-input__inner {
+		height: 35px;
+		line-height: 35px;
+	} 	
+	.el-dialog__footer {
+		padding: 0 20px 10px 20px;
+	}
+	.el-dialog__header {
+		padding: 10px 20px;
+	}
+	.el-dialog .el-form--inline .small-input .el-form-item__content{
+		width: 80px;
+	}
+  </style>
+</head>
+<body>
+	<div id="app">
+		<div class="searp-wrap">
+			<el-form inline>
+				<el-form-item>
+				    <el-button id="addbutton" type="primary" icon="el-icon-plus" @click="add()">新增</el-button>
+				</el-form-item>
+      		<el-form-item label="品名">
+				    <el-input placeholder="品名" v-model="form.productname"></el-input>
+				</el-form-item>
+				<el-form-item>
+				    <el-button type="primary" icon="el-icon-search" @click="searchList()">查询</el-button>
+				</el-form-item>
+			</el-form>
+		</div>
+		<div class="table">
+    <!--指定数据源为tableData tableData在	data()里面定义，所有用到的数据都需要在	data()里面定义-->
+			<el-table :data="tableData" stripe border
+				highlight-current-row
+				@row-click="rowClick">
+			   
+         <el-table-column label="品名" prop="productname"   ></el-table-column>
+         <el-table-column label="价格" prop="price"   ></el-table-column>
+			    <el-table-column label="备注" prop="remark"   ></el-table-column>
+           <el-table-column label="时间" prop="addtime"   ></el-table-column>
+      	<el-table-column label="操作"  >
+        <!--slot-scope="scope" 来取得作用域插槽:data绑定的数据，scope可以随便替换其他名称，只是定义对象来代表取得的data数据，便于使用-->
+					<template slot-scope="scope">
+         
+						<el-button  type="warning" icon="el-icon-delete" size="mini" @click="del(scope.$index, scope.row)"></el-button>
+      			<el-button  type="primary" icon="el-icon-edit" size="mini" @click="edit(scope.$index, scope.row)"></el-button>
+				
+          </template>
+				</el-table-column>
+			</el-table>
+      <!--分页组件-->
+			<div class="pagination-wrap">
+			    <el-pagination
+					@size-change="handleSizeChange"
+					@current-change="handleCurrentChange"
+					:current-page="curpage"
+					:page-sizes="[50,100,200]"
+					:page-size="pagesize"
+					layout="total, sizes, prev, pager, next, jumper"
+					:total="total">
+			    </el-pagination>
+			</div>
+       <!--数据输入弹出框-->
+			<el-dialog :title="formTitle" :visible.sync="visible" width="900px">
+			  	<el-form :model="form" inline label-width="70px" ref="form" :rules="rules">
+			  	 	<el-form-item label="分类" prop="categoryid" class="small-input">
+						<el-select v-model="form.categoryid" filterable placeholder="请选择分类">
+					    	<el-option label="a" value="a"></el-option>
+					    	<el-option label="b" value="b"></el-option>
+					  </el-select>
+				    </el-form-item>
+				   <el-form-item label="品名" prop="productname" class="mark">
+				    	<el-input v-model="form.productname"></el-input>
+				    </el-form-item>
+            
+            <el-form-item label="价格" prop="price" class="mark">
+				    	<el-input v-model="form.price"></el-input>
+				    </el-form-item>
+            
+				    <el-form-item label="备注" prop="remark" class="mark">
+				    	<el-input v-model="form.remark"></el-input>
+				    </el-form-item>
+				</el-form>
+				<div slot="footer" class="dialog-footer">
+				    <el-button @click="visible = false" size="mini">取 消</el-button>
+				    <el-button @click="submit('form')" type="primary" size="mini">确 定</el-button>
+				</div>
+			</el-dialog>
+		</div>
+  	</div>
+</body>
+ <script type="text/javascript" src="js/public.js"></script> <script type="text/javascript" src="js/utily.js"></script>
+	<script src="js/vue.min.js"></script>
+	<script src="js/elment_ui.js"></script>
+	<script src="js/axios.js"></script>
+	<script src="js/Qs.js"></script>
+  <script>
+if (localStorage.getItem('role')=="2")
+{
+	document.getElementById("addbutton").style.display="none";
+}
+    new Vue({
+    	el: '#app',
+    	data() {
+    		return {
+      
+    			visible: false,
+    			isAdd: true,
+				pagesize:10,
+				total:20,
+				userid:localStorage.getItem('userid'),
+				role:localStorage.getItem('role'),
+    			curpage: 1,
+          //定义数据列表 用于存储产品列表数据
+    			tableData: [],	
+          //新增产品的数据
+    			form: {
+					id:'',
+    				table: 'product',
+    				userid: "1",
+    				categoryid: '',
+    				productname: '',
+				  	price: '',
+           remark:'',
+				mode:"add",
+    			},
+    			rules: {
+    				categoryid: [{ required: true, message: '请输入分类', trigger: 'change' }],
+    				price: [ { required: true, message: '请输入价格', trigger: 'blur' } ],
+    				productname: [ { required: true, message: '请输入品名', trigger: 'blur' } ],
+    			},
+    			formTitle: '商品管理'
+    		}
+    	},
+      //页面创建时调用的函数
+    	created() {
+      if (localStorage.getItem('role')=="1")
+       {
+         this.showhistory=true;
+       }  
+    		console.log(axios)
+    		axios.defaults.headers.common['Authorization'] = localStorage.getItem('token');
+    		this.getList( { pageid: "1",pagesize: "50", userid: this.userid,role: this.role, table: 'product' } );
+     
+    	},
+      //定义方法
+    	methods: {
+    		rowClick(row) {
+    			console.log(row)
+    		},
+    		handleSizeChange (val){
+				
+				var params ={};
+				params.pageid= this.curpage;
+    		this.getList(params);
+			},
+    		handleCurrentChange (val) {
+				this.curpage=val;
+				var params ={};
+    		params.pageid= val;
+    		this.getList(params);
+			},
+    		currentPage(val) {
+				var params ={};
+    		params.pageid= val;
+    			this.getList(params);
+			},
+    		del(idx,row) {
+
+    			this.$confirm( '你确认要删除？', '提示', {
+			        confirmButtonText: '确定',
+			        cancelButtonText: '取消',
+			        type: 'warning'
+		        }).then(() => {
+		        	
+		        	axios.get( '//'+window.location.host+'/api/delete',{
+					  params:{
+					    table: 'product',
+					    id: row.id
+					  }
+					}).then( (res)=> {
+		        		console.log(res);
+	    				if(res.data.code=0) {
+    						this.$message({
+								type:'success',
+								message:'删除成功'
+							})
+							this.getList( { pageid: this.curpage, pagesize:"50",userid: this.userid, role: this.role, table: 'product' } );
+	    				}else{
+               // alert(res.data);
+              }
+					}).catch( function(err){
+					  console.log(err);
+					});
+		        }).catch(() => {
+		        	console.log('取消')
+		        });
+    		},
+  
+    		edit(idx,row) {
+    			this.isAdd = false;
+    			this.visible = true;
+    			this.formTitle = "修改";
+    			this.form = {
+            mode:"edit",
+    				table: 'product',
+            id:row.id,
+    				userid: this.userid,
+    				categoryid: row.categoryid,
+    				productname: row.productname,
+					price:row.price,
+          remark:row.remark,
+    			}
+				
+    		},
+    		add() {
+    			this.isAdd = true;
+    			this.visible = true;
+    			this.formTitle = "新增";
+    			this.form = {
+            mode:"add",
+    				table: 'product',
+    				userid: this.userid,
+    				categoryid: '',
+    				productname: '',
+					price:'',
+          remark:'',
+    			}
+    		},
+    		submit(formName) {
+    		
+    			this.$refs[formName].validate((valid) => {
+		          	if (valid) {
+		            	
+		            	this.$confirm( '是否确认操作？', '提示', {
+					        confirmButtonText: '确定',
+					        cancelButtonText: '取消',
+					        type: 'warning'
+				        }).then(() => {
+			            	axios.post('//'+window.location.host+'/api/addproduct',Qs.stringify(this.form) ).then( (res)=> {
+			            alert(res.data.code)
+                    
+								if(res.data.code==0) {
+		    				  if (res.data.message=="success")
+									{
+                    	this.visible = false;
+										this.$message({
+										type:'success',
+										message:'success'
+									   })
+									   this.getList( { pageid: "1",pagesize: "50", userid: this.userid,role: this.role, table: 'product' } );
+									}
+									else if (res.data=="exists")
+									{
+										this.$message({
+										type:'fail',
+										message:'數據已經存在'
+									   })
+									}
+									else
+									{
+										this.$message({
+											type:'fail',
+											message:res.data
+									    })
+									}
+				    			}else {
+				    				
+				    			}
+				    		}).catch((err)=> {});
+				        }).catch(() => {
+				        	console.log('取消')
+				        });
+
+		          	} else {
+		            	console.log('error submit!!');
+		            	return false;
+		         	}
+		        });
+
+    		},
+    		getList(obj) {
+    			axios.get( '//'+window.location.host+'/api/getlist',{
+    				params:obj
+    			}).then( (res)=> {
+    				if(res.data.code==0) {
+						if (res.data.message=="token error")
+						{
+							//window.location.href="login.html"
+						}else{
+							this.tableData = res.data.data;
+						this.pagesize=res.data.pagesize;
+						this.total=res.data.total;
+						this.curpage=res.data.curpage;
+						}
+    				}
+				}).catch( function(err){
+                   
+				  console.log(err);
+				});
+    		},
+       
+    		//查询
+    		searchList() {
+    			this.getList( {productname: this.form.productname, pageid: "1",pagesize: "50", userid: this.userid,role: this.role, table: 'product' } );
+    		},
+        goback() {
+          window.location.href = '#';
+          },
+    
+
+    	}
+    })
+  </script>
+</html>
+
+</html>

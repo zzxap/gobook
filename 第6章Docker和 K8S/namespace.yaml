@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: dev
+   labels:
+     name: dev
+
+#
+
+编写Deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productmanage
+  namespace: dev
+spec:
+  replicas: 3
+ #副本的数量
+  selector:
+    matchLabels:
+      app: productmanage
+  template:
+    metadata:
+      namespace: dev
+      labels:
+        app: productmanage
+    spec:
+      containers:
+        - name: productmanage
+          image: productmanage:latest
+          ports:
+          - name: http
+            containerPort: 8090
+
+      #这里containerPort是容器内部的port targetPort映射到containerPort
+      #创建： kubectl apply -f deployment.yaml

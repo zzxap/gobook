@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: productmanage
+  namespace: dev
+spec:
+  type: NodePort
+  selector:
+    app: productmanage
+    release: stabel
+  ports:
+  - name: http
+    port: 8090
+    targetPort: 8090
+    nodePort: 30080
+    
+    #，nodePort是kubernetes提供给集群外部客户访问service入口的一种方式（另一种方式是LoadBalancer），所以，<nodeIP>:nodePort 是提供给集群外部客户访问service的入口。
+    #targetPort是pod上的端口，从port和nodePort上到来的数据最终经过kube-proxy流入到后端pod的targetPort上进入容器。
+    #port和nodePort都是service的端口，前者暴露给集群内客户访问服务，后者暴露给集群外客户访问服务
+    #创建svc: kubectl apply -f svc-nodePort.yaml
+    
+    #kubectl get pod -n kube-system  获取pod
+    #kubectl describe po calico-node-m6442
+    #kubectl describe pod -n kube-system  xxx 查看pod

@@ -1,0 +1,24 @@
+syntax = "proto3";
+package blueter;
+
+//服务接口
+service Blueter {
+    rpc Hello(HelloRequest) returns (HelloResponse) {}
+}
+
+message HelloRequest {
+    string from = 1;
+    string to = 2;
+    string msg = 3;
+}
+
+message HelloResponse {
+    string from = 1;
+    string to = 2;
+    string msg = 3;
+}
+
+
+
+
+

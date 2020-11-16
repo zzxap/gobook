@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productmanage
+  namespace: dev
+spec:
+  replicas: 3
+ #副本的数量
+  selector:
+    matchLabels:
+      app: productmanage
+  template:
+    metadata:
+      namespace: dev
+      labels:
+        app: productmanage
+spec:
+nodeSelector:
+        type: backEndNode1    #直接通过节点名称调度到指定节点
+  containers:
+        - name: productmanage
+          image: productmanage:latest
+          ports:
+          - name: http
+            containerPort: 8090

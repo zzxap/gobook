@@ -1,0 +1,25 @@
+cd /home/gopath/src ; (rm -rf ProductManage) ; ( rm -f ProductManage.zip); rz
+
+unzip -o ProductManage.zip ; cd ProductManage ; go build -ldflags "-w -s"  main.go
+
+(rm -f ProductManage.zip)&&(mv main ProductManage)&&(zip -r ProductManage.zip ProductManage)&&(sz ProductManage.zip)
+
+(rm -f ProductManage) && (unzip ProductManage_\(2\).zip) &&(chmod 771 ProductManage)&&(rm -f ProductManage_\(2\).zip)
+
+(kill -9 $(pidof ProductManage)) &&(nohup ./ProductManage &) &&(ps -aux | grep "ProductManage")
+(kill -9 $(pidof ProductManage))  &&(ps -aux | grep "ProductManage")
+
+docker build -t productmanage . 
+docker run -i -t -p 8090:8090 productmanage
+
+docker build -t productmanage . 
+docker run -i -t -p 8090:8090 productmanage
+
+重启docker
+ systemctl restart docker
+
+查看生成的镜像
+docker images
+
+
+

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: dev
+   labels:
+     name: dev
+    
+    
+    # kubectl  create  -f  namespace.yaml
